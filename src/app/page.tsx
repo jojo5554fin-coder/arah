@@ -49,8 +49,8 @@ const pricingTiers = [
   {
     name: "Pro",
     icon: Zap,
-    monthlyPrice: 19.90,
-    annualPrice: 159,
+    monthlyPrice: 9,
+    annualPrice: 79,
     description: "For serious growers who want unlimited access and AI insights.",
     cta: "Start Pro",
     ctaHref: "/signup?plan=pro",
@@ -76,13 +76,13 @@ const pricingTiers = [
     icon: Crown,
     monthlyPrice: null,
     annualPrice: null,
-    lifetimePrice: 599,
-    description: "Pay once. Own forever. Includes every future feature we ever ship.",
-    cta: "Get Lifetime Access",
+    lifetimePrice: 99,
+    description: "Pay once, own forever. Every future feature included — locked in at our lowest price ever.",
+    cta: "Claim Early Bird Access",
     ctaHref: "/signup?plan=master",
     ctaVariant: "default" as const,
     highlight: false,
-    badge: "Best Value",
+    badge: "⚡ Early Bird",
     features: [
       { label: "Everything in Pro", included: true },
       { label: "Lifetime access — pay once", included: true },
@@ -313,7 +313,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2">
                   <span className={cn("text-sm font-medium transition-colors", isAnnual ? "text-foreground" : "text-muted-foreground")}>Annual</span>
                   <span className="text-xs font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    Save 33%
+                    Save 27%
                   </span>
                 </div>
               </motion.div>
@@ -341,8 +341,12 @@ export default function LandingPage() {
                     {/* Badge */}
                     {tier.badge && (
                       <div className={cn(
-                        "absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold tracking-wide",
-                        tier.highlight ? "bg-white text-primary" : "bg-amber-500 text-white"
+                        "absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold tracking-wide whitespace-nowrap",
+                        tier.highlight
+                          ? "bg-white text-primary"
+                          : tier.name === "Master"
+                          ? "bg-gradient-to-r from-red-500 to-orange-500 text-white animate-pulse"
+                          : "bg-amber-500 text-white"
                       )}>
                         {tier.badge}
                       </div>
@@ -367,9 +371,21 @@ export default function LandingPage() {
                     {/* Price */}
                     <div>
                       {tier.lifetimePrice ? (
-                        <div>
-                          <span className="text-4xl font-extrabold tracking-tight">RM {tier.lifetimePrice}</span>
-                          <span className={cn("text-sm ml-2", tier.highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>one-time</span>
+                        <div className="space-y-2">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-extrabold tracking-tight">RM {tier.lifetimePrice}</span>
+                            <span className={cn("text-sm ml-1", tier.highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>one-time</span>
+                          </div>
+                          {/* Scarcity counter */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: 8 }).map((_, k) => (
+                                <div key={k} className={cn("h-1.5 w-3 rounded-full", k < 3 ? "bg-red-400" : "bg-muted")} />
+                              ))}
+                            </div>
+                            <span className="text-xs font-semibold text-red-500">Only 73 spots left</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Price will increase to RM 199 after launch.</p>
                         </div>
                       ) : tier.monthlyPrice === 0 ? (
                         <div>
@@ -380,13 +396,13 @@ export default function LandingPage() {
                         <div className="space-y-1">
                           <div className="flex items-end gap-1">
                             <span className="text-4xl font-extrabold tracking-tight">
-                              RM {isAnnual ? Math.round(tier.annualPrice! / 12 * 10) / 10 : tier.monthlyPrice}
+                              RM {isAnnual ? (Math.round(tier.annualPrice! / 12 * 10) / 10).toFixed(2) : tier.monthlyPrice}
                             </span>
                             <span className={cn("text-sm mb-1.5", tier.highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>/month</span>
                           </div>
                           {isAnnual && (
                             <p className={cn("text-xs", tier.highlight ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                              Billed RM {tier.annualPrice}/year
+                              Billed RM {tier.annualPrice}/year — save RM {(tier.monthlyPrice! * 12 - tier.annualPrice!).toFixed(0)}
                             </p>
                           )}
                         </div>
