@@ -25,6 +25,7 @@ export function ShareDialog({
 }: ShareDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [format, setFormat] = useState<"story" | "post">("story");
   const cardRef = useRef<HTMLDivElement>(null);
 
   const themeGradients = {
@@ -104,21 +105,37 @@ export function ShareDialog({
       </DialogTrigger>
       
       <DialogContent className="sm:max-w-md border-0 p-0 overflow-hidden bg-background">
-        <div className="p-6 pb-0">
+        <div className="p-6 pb-4">
           <DialogHeader>
             <DialogTitle>Share Your Progress</DialogTitle>
             <DialogDescription>
-              Inspire others by sharing your consistency.
+              Inspire others by sharing your consistency on Instagram or Threads.
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex gap-2 mt-4 bg-muted p-1 rounded-lg">
+            <button 
+              onClick={() => setFormat("story")}
+              className={cn("flex-1 py-1.5 text-xs font-medium rounded-md transition-colors", format === "story" ? "bg-background shadow-sm" : "text-muted-foreground")}
+            >
+              IG Story (9:16)
+            </button>
+            <button 
+              onClick={() => setFormat("post")}
+              className={cn("flex-1 py-1.5 text-xs font-medium rounded-md transition-colors", format === "post" ? "bg-background shadow-sm" : "text-muted-foreground")}
+            >
+              Post (4:5)
+            </button>
+          </div>
         </div>
 
         {/* The Card to be exported */}
-        <div className="p-6 bg-muted/30 flex justify-center items-center">
+        <div className="p-6 bg-muted/30 flex justify-center items-center overflow-hidden">
           <div 
             ref={cardRef}
             className={cn(
-              "relative w-full max-w-[340px] aspect-[4/5] rounded-3xl p-8 flex flex-col justify-between overflow-hidden shadow-2xl",
+              "relative w-full rounded-3xl p-8 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300",
+              format === "story" ? "max-w-[280px] aspect-[9/16]" : "max-w-[340px] aspect-[4/5]",
               "bg-gradient-to-br",
               themeGradients[theme]
             )}

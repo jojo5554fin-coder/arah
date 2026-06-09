@@ -9,7 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, subDays, isSameDay } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Habit {
   id: string;
@@ -34,9 +35,11 @@ export default function HabitsPage() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [timeRange, setTimeRange] = useState<"30" | "365">("30");
 
-  // Generate last 60 days
-  const days = Array.from({ length: 60 }).map((_, i) => subDays(new Date(), 59 - i));
+  // Generate days based on selected range
+  const daysLength = parseInt(timeRange);
+  const days = Array.from({ length: daysLength }).map((_, i) => subDays(new Date(), daysLength - 1 - i));
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -51,12 +54,12 @@ export default function HabitsPage() {
       
       const { data: userAuth } = await supabase.auth.getUser();
       if (userAuth?.user) {
-        // Limit query to last 60 days
-        const sixtyDaysAgo = subDays(new Date(), 60).toISOString();
+        // Limit query to last 365 days to be safe for both ranges
+        const maxDaysAgo = subDays(new Date(), 365).toISOString();
         const { data: completionsData, error: compError } = await supabase
           .from("habit_completions")
           .select("*")
-          .gte("completed_at", sixtyDaysAgo);
+          .gte("completed_at", maxDaysAgo);
           
         if (compError) throw compError;
         setCompletions(completionsData || []);
@@ -150,14 +153,22 @@ export default function HabitsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
-      <div className="page-header">
+      <div className="page-header flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="page-title">Your Habits</h2>
           <p className="page-subtitle">Detailed tracking traces for each habit.</p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Create Habit
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as "30" | "365")} className="w-full sm:w-auto">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="30">30 Days</TabsTrigger>
+              <TabsTrigger value="365">This Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button onClick={handleCreate} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" /> Create
+          </Button>
+        </div>
       </div>
 
       <HabitDialog 
@@ -174,12 +185,22 @@ export default function HabitsPage() {
           ))}
         </div>
       ) : habits.length === 0 ? (
-        <div className="empty-state">
-          <div className="text-4xl mb-4">🌱</div>
-          <h3 className="text-lg font-semibold">No habits yet</h3>
-          <p className="text-muted-foreground mb-4">Plant your first seed to start growing.</p>
-          <Button onClick={handleCreate} variant="outline">Create your first habit</Button>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-3xl bg-muted/10"
+        >
+          <div className="h-24 w-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-emerald-500/20">
+            🌱
+          </div>
+          <h3 className="text-2xl font-bold tracking-tight mb-2">Plant Your First Seed</h3>
+          <p className="text-muted-foreground max-w-[400px] mb-8">
+            Great things start small. Build your momentum by adding a simple habit you can commit to daily.
+          </p>
+          <Button onClick={handleCreate} size="lg" className="h-12 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+            <Plus className="mr-2 h-5 w-5" /> Create a Habit
+          </Button>
+        </motion.div>
       ) : (
         <div className="space-y-6">
           {habits.map((habit) => {
@@ -208,11 +229,18 @@ export default function HabitsPage() {
                 
                 <CardContent className="pt-4">
                   {/* Heatmap Trace */}
-                  <div className="relative">
-                    <div className="flex gap-1.5 overflow-x-auto pb-4 custom-scrollbar snap-x">
-                      {days.map((date, i) => {
+                  <div className="relative overflow-hidden">
+                    <div 
+                      className="flex gap-1.5 overflow-x-auto pb-4 custom-scrollbar snap-x"
+                      // Reverse row order so scrolling starts at the right side (most recent) automatically
+                      style={{ flexDirection: "row-reverse" }}
+                    >
+                      {/* Reverse the days array so the newest is first in the flex container, naturally appearing on the right due to row-reverse */}
+                      {[...days].reverse().map((date, i) => {
                         const isCompleted = habitComps.some(c => isSameDay(new Date(c.completed_at), date));
                         const isToday = isSameDay(date, new Date());
+                        // Render smaller blocks if 365 days to fit more in
+                        const isYearRange = timeRange === "365";
                         
                         return (
                           <div 
@@ -224,16 +252,17 @@ export default function HabitsPage() {
                               initial={false}
                               animate={{ scale: isCompleted ? 1 : 0.9 }}
                               className={cn(
-                                "w-6 h-6 rounded-md transition-colors flex items-center justify-center",
+                                "rounded-md transition-colors flex items-center justify-center",
+                                isYearRange ? "w-4 h-4" : "w-6 h-6",
                                 isCompleted ? colorClass : "bg-muted hover:bg-muted/80",
                                 isToday && "ring-2 ring-foreground ring-offset-2 ring-offset-background"
                               )}
                             >
-                              {isCompleted && <CheckCircle2 className="h-3 w-3 text-white opacity-80" />}
+                              {isCompleted && !isYearRange && <CheckCircle2 className="h-3 w-3 text-white opacity-80" />}
                             </motion.div>
                             {/* Show day of month sparingly to keep it clean */}
-                            {date.getDate() === 1 || isToday ? (
-                              <span className={cn("text-[10px] font-medium", isToday ? "text-foreground" : "text-muted-foreground")}>
+                            {(date.getDate() === 1 || isToday) ? (
+                              <span className={cn("text-[10px] font-medium whitespace-nowrap", isToday ? "text-foreground" : "text-muted-foreground", isYearRange && "text-[8px] tracking-tighter")}>
                                 {isToday ? 'Today' : format(date, "MMM")}
                               </span>
                             ) : (

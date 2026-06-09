@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { GoalDialog, type Goal } from "@/components/goals/goal-dialog";
 import { GoalCard } from "@/components/goals/goal-card";
+import { motion } from "framer-motion";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -145,12 +146,22 @@ export default function GoalsPage() {
           ))}
         </div>
       ) : goals.length === 0 ? (
-        <div className="empty-state">
-          <div className="text-4xl mb-4">🏆</div>
-          <h3 className="text-lg font-semibold">No goals set</h3>
-          <p className="text-muted-foreground mb-4">Set a target to give your daily habits direction.</p>
-          <Button onClick={handleCreate} variant="outline">Create your first goal</Button>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-3xl bg-muted/10"
+        >
+          <div className="h-24 w-24 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-amber-500/20">
+            🏆
+          </div>
+          <h3 className="text-2xl font-bold tracking-tight mb-2">Aim Higher</h3>
+          <p className="text-muted-foreground max-w-[400px] mb-8">
+            Habits are the vehicle, but Goals are the destination. Set a target to give your daily routines a clear direction.
+          </p>
+          <Button onClick={handleCreate} size="lg" className="h-12 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+            <Plus className="mr-2 h-5 w-5" /> Set Your First Goal
+          </Button>
+        </motion.div>
       ) : (
         <div className="grid-responsive-2">
           {goals.map((goal) => (
