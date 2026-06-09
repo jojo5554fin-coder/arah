@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 import { format, subDays, isSameDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradeBanner } from "@/components/monetization/upgrade-banner";
+import { UpgradeModal } from "@/components/monetization/upgrade-modal";
 
 interface Habit {
   id: string;
@@ -36,6 +39,8 @@ export default function HabitsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [timeRange, setTimeRange] = useState<"30" | "365">("30");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const { isPro } = useSubscription();
 
   // Generate days based on selected range
   const daysLength = parseInt(timeRange);
@@ -95,6 +100,10 @@ export default function HabitsPage() {
   }, []);
 
   const handleCreate = () => {
+    if (!isPro && habits.filter(h => h.is_active).length >= 3) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     setEditingHabit(null);
     setIsDialogOpen(true);
   };
@@ -177,6 +186,20 @@ export default function HabitsPage() {
         habit={editingHabit} 
         onSuccess={fetchData} 
       />
+
+      {/* Upgrade modal for free users hitting limit */}
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        trigger="habits-limit"
+      />
+
+      {/* Contextual upgrade banner */}
+      {!isPro && habits.length >= 2 && (
+        <UpgradeBanner
+          variant={habits.length >= 3 ? "habits-limit" : "habits-warning"}
+        />
+      )}
 
       {isLoading ? (
         <div className="space-y-4">

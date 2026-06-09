@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { FidgetDice } from "@/components/fidget-dice";
+import { FloatingUpgradePill } from "@/components/monetization/floating-upgrade-pill";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
         <MobileNav />
       </div>
       <FidgetDice />
+      <FloatingUpgradePill />
     </div>
   );
 }
