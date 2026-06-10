@@ -14,6 +14,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradeBanner } from "@/components/monetization/upgrade-banner";
 import { UpgradeModal } from "@/components/monetization/upgrade-modal";
+import { HabitTemplates } from "@/components/habits/habit-templates";
+import confetti from "canvas-confetti";
 
 interface Habit {
   id: string;
@@ -42,6 +44,7 @@ export default function HabitsPage() {
   const [timeRange, setTimeRange] = useState<"30" | "365">("30");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [loggingHabitId, setLoggingHabitId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
   const { isPro } = useSubscription();
 
   // Generate days based on selected range
@@ -133,6 +136,16 @@ export default function HabitsPage() {
             .update({ completion_type: completionType })
             .eq("id", existing.id);
           if (error) throw error;
+          if (completionType === "full") {
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.6 },
+              colors: ["#3b82f6", "#10b981", "#6366f1"],
+              disableForReducedMotion: true,
+              zIndex: 100,
+            });
+          }
           toast.success(completionType === "full" ? "Marked as fully complete!" : "Marked as partial");
         }
       } else {
@@ -144,6 +157,16 @@ export default function HabitsPage() {
           completion_type: completionType,
         });
         if (error) throw error;
+        if (completionType === "full") {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.6 },
+            colors: ["#3b82f6", "#10b981", "#6366f1"],
+            disableForReducedMotion: true,
+            zIndex: 100,
+          });
+        }
         toast.success(completionType === "full" ? "✅ Habit complete!" : "⚡ Partial progress logged!");
       }
       await fetchData();
@@ -220,6 +243,11 @@ export default function HabitsPage() {
               <TabsTrigger value="365">This Year</TabsTrigger>
             </TabsList>
           </Tabs>
+          {habits.length > 0 && (
+            <Button variant="outline" onClick={() => setShowTemplates(s => !s)} className="w-full sm:w-auto">
+              ✨ Starter Packs
+            </Button>
+          )}
           <Button onClick={handleCreate} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create
           </Button>
@@ -253,22 +281,36 @@ export default function HabitsPage() {
             <Card key={i} className="opacity-50 animate-pulse h-32"></Card>
           ))}
         </div>
-      ) : habits.length === 0 ? (
-        <motion.div 
+      ) : habits.length === 0 || showTemplates ? (
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-3xl bg-muted/10"
+          className="border-2 border-dashed rounded-3xl bg-muted/10 p-8"
         >
-          <div className="h-24 w-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-emerald-500/20">
-            🌱
-          </div>
-          <h3 className="text-2xl font-bold tracking-tight mb-2">Plant Your First Seed</h3>
-          <p className="text-muted-foreground max-w-[400px] mb-8">
-            Great things start small. Build your momentum by adding a simple habit you can commit to daily.
-          </p>
-          <Button onClick={handleCreate} size="lg" className="h-12 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
-            <Plus className="mr-2 h-5 w-5" /> Create a Habit
-          </Button>
+          {!showTemplates ? (
+            <div className="flex flex-col items-center text-center">
+              <div className="h-24 w-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-emerald-500/20">
+                🌱
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight mb-2">Plant Your First Seed</h3>
+              <p className="text-muted-foreground max-w-[400px] mb-8">
+                Great things start small. Jump-start with a ready-made pack, or build your own.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={() => setShowTemplates(true)} size="lg" className="h-12 px-8 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+                  ✨ Browse Starter Packs
+                </Button>
+                <Button onClick={handleCreate} size="lg" variant="outline" className="h-12 px-8 rounded-full hover:scale-105 transition-transform">
+                  <Plus className="mr-2 h-5 w-5" /> Create Manually
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <HabitTemplates
+              onSuccess={() => { setShowTemplates(false); fetchData(); }}
+              onSkip={() => setShowTemplates(false)}
+            />
+          )}
         </motion.div>
       ) : (
         <div className="space-y-6">

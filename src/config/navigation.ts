@@ -8,6 +8,7 @@ import {
   Bot,
   Settings,
   User,
+  Timer,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,12 @@ export const mainNavItems: NavItem[] = [
     href: "/coach",
     icon: Bot,
   },
+  {
+    title: "Focus",
+    href: "/focus",
+    icon: Timer,
+    badge: "New",
+  },
 ];
 
 export const secondaryNavItems: NavItem[] = [
@@ -97,5 +104,10 @@ export const mobileNavItems: NavItem[] = [
     title: "Reports",
     href: "/reports",
     icon: BarChart3,
+  },
+  {
+    title: "Focus",
+    href: "/focus",
+    icon: Timer,
   },
 ];

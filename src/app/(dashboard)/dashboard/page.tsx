@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { format, subDays, addDays } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Plus, Target, LayoutGrid } from "lucide-react";
+import { Plus, Target, LayoutGrid, Timer } from "lucide-react";
 import { AggregateGrid } from "@/components/dashboard/aggregate-grid";
 import { GridThemeSelector, GridTheme } from "@/components/dashboard/grid-theme-selector";
 import { TodaysHabits } from "@/components/dashboard/todays-habits";
@@ -15,6 +15,8 @@ import Link from "next/link";
 import { ShareDialog } from "@/components/share/share-dialog";
 import { AverageActivityPopup } from "@/components/dashboard/average-activity-popup";
 import { GamificationWidget } from "@/components/gamification/gamification-widget";
+import { motion } from "framer-motion";
+import { MissedHabitReflection } from "@/components/habits/missed-habit-reflection";
 
 interface Habit {
   id: string;
@@ -30,6 +32,13 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [gridTheme, setGridTheme] = useState<GridTheme>("emerald");
+  const [reflectionOpen, setReflectionOpen] = useState(false);
+  const [reflectingHabit, setReflectingHabit] = useState<{ id: string; name: string } | null>(null);
+
+  const handleReflectMissed = (id: string, name: string) => {
+    setReflectingHabit({ id, name });
+    setReflectionOpen(true);
+  };
 
   // Show a rolling 140 day window ending today for the heatmap
   const endDate = new Date();
@@ -174,9 +183,57 @@ export default function DashboardPage() {
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayCompletions = completions[todayStr]?.size || 0;
+  const todayScore = habits.length > 0 ? Math.round((todayCompletions / habits.length) * 100) : 0;
+  const scoreLabel = todayScore === 100 ? "Perfect day! 🎉" : todayScore >= 70 ? "Strong momentum 🔥" : todayScore >= 40 ? "Keep going 💪" : todayScore > 0 ? "Good start ⚡" : "Let's get started 🌱";
+  const circumference = 2 * Math.PI * 32;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
+      {/* Today's Score Ring */}
+      {habits.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="col-span-2 sm:col-span-1 bg-card rounded-3xl border p-5 flex items-center gap-4"
+          >
+            <div className="relative h-20 w-20 shrink-0">
+              <svg className="-rotate-90 absolute inset-0" width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/30" />
+                <motion.circle
+                  cx="40" cy="40" r="32"
+                  fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"
+                  className="text-primary"
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: circumference * (1 - todayScore / 100) }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-extrabold tabular-nums">{todayScore}%</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Today's Score</p>
+              <p className="font-bold text-sm mt-0.5">{scoreLabel}</p>
+              <p className="text-xs text-muted-foreground mt-1">{todayCompletions}/{habits.length} habits done</p>
+            </div>
+          </motion.div>
+
+          {/* Focus Timer shortcut */}
+          <Link href="/focus" className="col-span-2 sm:col-span-1 bg-primary/5 border border-primary/20 rounded-3xl p-5 flex items-center gap-4 hover:bg-primary/10 transition-colors group">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Timer className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Focus Timer</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Start a Pomodoro session</p>
+            </div>
+          </Link>
+        </div>
+      )}
+
       <div className="page-header flex flex-col gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="page-title">Activity Grid</h2>
@@ -251,6 +308,7 @@ export default function DashboardPage() {
                   habits={habits}
                   todayCompletions={completions[todayStr] || new Set()}
                   onToggleHabit={(id, isCompleted) => handleToggleHabit(id, new Date(), isCompleted)}
+                  onReflectMissed={handleReflectMissed}
                 />
               )}
             </CardContent>
@@ -259,6 +317,16 @@ export default function DashboardPage() {
           <GamificationWidget />
         </div>
       </div>
+
+      {reflectingHabit && (
+        <MissedHabitReflection
+          open={reflectionOpen}
+          onOpenChange={setReflectionOpen}
+          habitId={reflectingHabit.id}
+          habitName={reflectingHabit.name}
+          onSuccess={fetchGridData}
+        />
+      )}
     </div>
   );
 }

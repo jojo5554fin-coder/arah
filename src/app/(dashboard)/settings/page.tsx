@@ -2,6 +2,7 @@ import { Settings, Bell, Lock, User, Palette } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { SettingsAppearance } from "@/components/settings/settings-appearance";
 
 export const metadata = {
   title: "Settings | ARAH",
@@ -64,11 +65,9 @@ export default function SettingsPage() {
             <CardDescription>Customize the look and feel of your dashboard.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="font-medium">Theme Preferences</div>
-                <div className="text-sm text-muted-foreground">This is managed by the theme toggle in the sidebar.</div>
-              </div>
+            <div className="space-y-4">
+              <span className="text-sm font-medium text-foreground block">Theme Preferences</span>
+              <SettingsAppearance />
             </div>
           </CardContent>
         </Card>

@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categoryList } from "@/config/categories";
 import { Loader2 } from "lucide-react";
@@ -37,15 +36,38 @@ export function HabitDialog({ open, onOpenChange, habit, onSuccess }: HabitDialo
   const [name, setName] = useState(habit?.name || "");
   const [category, setCategory] = useState(habit?.category || "");
   const [frequency, setFrequency] = useState(habit?.frequency || "daily");
+  const [customDays, setCustomDays] = useState<string[]>([]);
   const [reminderTime, setReminderTime] = useState(habit?.reminder_time || "");
   const [color, setColor] = useState(habit?.color || "emerald");
+
+  const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const FREQ_OPTIONS = [
+    { value: "daily", label: "Every day" },
+    { value: "weekdays", label: "Weekdays (Mon–Fri)" },
+    { value: "weekends", label: "Weekends only" },
+    { value: "custom-days", label: "Specific days" },
+    { value: "2x", label: "2× per week" },
+    { value: "3x", label: "3× per week" },
+    { value: "4x", label: "4× per week" },
+    { value: "weekly", label: "Once a week" },
+  ];
 
   // Update state when habit prop changes (for editing)
   useEffect(() => {
     if (open) {
       setName(habit?.name || "");
       setCategory(habit?.category || "");
-      setFrequency(habit?.frequency || "daily");
+      
+      const freq = habit?.frequency || "daily";
+      const isStandard = ["daily", "weekdays", "weekends", "2x", "3x", "4x", "weekly"].includes(freq);
+      if (isStandard) {
+        setFrequency(freq);
+        setCustomDays([]);
+      } else {
+        setFrequency("custom-days");
+        setCustomDays(freq.split(","));
+      }
+
       setReminderTime(habit?.reminder_time || "");
       setColor(habit?.color || "emerald");
     }
@@ -58,8 +80,14 @@ export function HabitDialog({ open, onOpenChange, habit, onSuccess }: HabitDialo
       return;
     }
 
+    if (frequency === "custom-days" && customDays.length === 0) {
+      toast.error("Please select at least one day.");
+      return;
+    }
+
     setIsLoading(true);
     const supabase = createClient();
+    const freqToSave = frequency === "custom-days" ? customDays.join(",") : frequency;
 
     try {
       if (isEditing && habit) {
@@ -68,7 +96,7 @@ export function HabitDialog({ open, onOpenChange, habit, onSuccess }: HabitDialo
           .update({
             name,
             category,
-            frequency,
+            frequency: freqToSave,
             reminder_time: reminderTime || null,
             color,
           })
@@ -86,7 +114,7 @@ export function HabitDialog({ open, onOpenChange, habit, onSuccess }: HabitDialo
             user_id: user.id,
             name,
             category,
-            frequency,
+            frequency: freqToSave,
             reminder_time: reminderTime || null,
             color,
             is_active: true,
@@ -174,20 +202,37 @@ export function HabitDialog({ open, onOpenChange, habit, onSuccess }: HabitDialo
 
           <div className="space-y-3">
             <Label>Frequency</Label>
-            <RadioGroup value={frequency} onValueChange={setFrequency} className="flex gap-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="daily" id="daily" />
-                <Label htmlFor="daily" className="font-normal">Daily</Label>
+            <Select value={frequency} onValueChange={(val) => setFrequency(val || "daily")}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="How often?" />
+              </SelectTrigger>
+              <SelectContent>
+                {FREQ_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {frequency === "custom-days" && (
+              <div className="flex gap-2 flex-wrap">
+                {DAYS.map(day => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setCustomDays(prev =>
+                      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+                    )}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all",
+                      customDays.includes(day)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    )}
+                  >
+                    {day}
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="weekdays" id="weekdays" />
-                <Label htmlFor="weekdays" className="font-normal">Weekdays</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="weekly" id="weekly" />
-                <Label htmlFor="weekly" className="font-normal">Weekly</Label>
-              </div>
-            </RadioGroup>
+            )}
           </div>
 
           <div className="space-y-2">
