@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { BarChart3, AlertCircle } from "lucide-react";
 import { WeeklyReportCard } from "@/components/reports/weekly-report-card";
+import { MoodHabitCorrelationCard } from "@/components/reports/mood-habit-correlation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,9 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<WeeklyReport[]>([]);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [habits, setHabits] = useState<any[]>([]);
+  const [completions, setCompletions] = useState<any[]>([]);
+  const [moodEntries, setMoodEntries] = useState<any[]>([]);
 
   const fetchReports = async () => {
     setIsLoading(true);
@@ -118,7 +122,28 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReports();
+    fetchCorrelationData();
   }, []);
+
+  const fetchCorrelationData = async () => {
+    const supabase = createClient();
+    try {
+      const { data: habitsData } = await supabase.from("habits").select("id, name, color");
+      const { data: compData } = await supabase
+        .from("habit_completions")
+        .select("habit_id, completed_at, completion_type")
+        .gte("completed_at", subDays(new Date(), 30).toISOString());
+      const { data: moodData } = await supabase
+        .from("mood_entries")
+        .select("logged_at, stress, happiness, focus, energy, motivation")
+        .gte("logged_at", subDays(new Date(), 30).toISOString());
+      if (habitsData) setHabits(habitsData);
+      if (compData) setCompletions(compData);
+      if (moodData) setMoodEntries(moodData);
+    } catch {
+      // Correlation data is optional — silently fail
+    }
+  };
 
   const generateReportNow = async () => {
     toast.success("Generating report...");
@@ -176,8 +201,13 @@ export default function ReportsPage() {
           <Button onClick={generateReportNow}>Generate Report Now</Button>
         </div>
       ) : selectedReportId ? (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
           <WeeklyReportCard report={reports.find(r => r.id === selectedReportId) || reports[0]} />
+          <MoodHabitCorrelationCard
+            habits={habits}
+            completions={completions}
+            moodEntries={moodEntries}
+          />
         </div>
       ) : null}
     </div>

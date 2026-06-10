@@ -29,6 +29,7 @@ interface HabitCompletion {
   id: string;
   habit_id: string;
   completed_at: string;
+  completion_type: "full" | "partial";
 }
 
 export default function HabitsPage() {
@@ -40,6 +41,7 @@ export default function HabitsPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [timeRange, setTimeRange] = useState<"30" | "365">("30");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [loggingHabitId, setLoggingHabitId] = useState<string | null>(null);
   const { isPro } = useSubscription();
 
   // Generate days based on selected range
@@ -83,8 +85,8 @@ export default function HabitsPage() {
         // Mock completions
         const mockComps: HabitCompletion[] = [];
         days.forEach(d => {
-          if (Math.random() > 0.4) mockComps.push({ id: Math.random().toString(), habit_id: "1", completed_at: d.toISOString() });
-          if (Math.random() > 0.3) mockComps.push({ id: Math.random().toString(), habit_id: "2", completed_at: d.toISOString() });
+          if (Math.random() > 0.4) mockComps.push({ id: Math.random().toString(), habit_id: "1", completed_at: d.toISOString(), completion_type: "full" as const });
+          if (Math.random() > 0.3) mockComps.push({ id: Math.random().toString(), habit_id: "2", completed_at: d.toISOString(), completion_type: Math.random() > 0.7 ? "partial" as const : "full" as const });
         });
         setCompletions(mockComps);
       } else {
@@ -106,6 +108,50 @@ export default function HabitsPage() {
     }
     setEditingHabit(null);
     setIsDialogOpen(true);
+  };
+
+  const handleLogCompletion = async (habitId: string, completionType: "full" | "partial") => {
+    setLoggingHabitId(habitId);
+    const supabase = createClient();
+    const today = new Date().toISOString().split("T")[0];
+
+    // Check if already logged today
+    const existing = completions.find(
+      c => c.habit_id === habitId && isSameDay(new Date(c.completed_at), new Date())
+    );
+
+    try {
+      if (existing) {
+        if (existing.completion_type === completionType) {
+          // Un-log if same type tapped again
+          const { error } = await supabase.from("habit_completions").delete().eq("id", existing.id);
+          if (error) throw error;
+          toast.success("Removed today's completion");
+        } else {
+          // Update to new type
+          const { error } = await supabase.from("habit_completions")
+            .update({ completion_type: completionType })
+            .eq("id", existing.id);
+          if (error) throw error;
+          toast.success(completionType === "full" ? "Marked as fully complete!" : "Marked as partial");
+        }
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase.from("habit_completions").insert({
+          habit_id: habitId,
+          user_id: user?.id,
+          completed_at: new Date().toISOString(),
+          completion_type: completionType,
+        });
+        if (error) throw error;
+        toast.success(completionType === "full" ? "✅ Habit complete!" : "⚡ Partial progress logged!");
+      }
+      await fetchData();
+    } catch (err) {
+      toast.error("Failed to log completion");
+    } finally {
+      setLoggingHabitId(null);
+    }
   };
 
   const handleEdit = (habit: Habit) => {
@@ -232,12 +278,38 @@ export default function HabitsPage() {
             
             return (
               <Card key={habit.id} className={cn("transition-all duration-200 overflow-hidden", !habit.is_active && "opacity-60 grayscale-[0.5]")}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2 bg-muted/20 border-b border-border/50">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 bg-muted/20 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className={cn("w-3 h-3 rounded-full", colorClass)} />
                     <CardTitle className="text-lg">{habit.name}</CardTitle>
                   </div>
                   <div className="flex items-center gap-1">
+                    {/* Today's quick-log buttons */}
+                    {habit.is_active && (() => {
+                      const todayComp = habitComps.find(c => isSameDay(new Date(c.completed_at), new Date()));
+                      return (
+                        <>
+                          <Button
+                            variant={todayComp?.completion_type === "partial" ? "default" : "ghost"}
+                            size="sm"
+                            className={cn("h-7 px-2 text-xs gap-1", todayComp?.completion_type === "partial" && "opacity-80")}
+                            onClick={() => handleLogCompletion(habit.id, "partial")}
+                            disabled={loggingHabitId === habit.id}
+                          >
+                            ⚡ Partial
+                          </Button>
+                          <Button
+                            variant={todayComp?.completion_type === "full" ? "default" : "ghost"}
+                            size="sm"
+                            className="h-7 px-2 text-xs gap-1"
+                            onClick={() => handleLogCompletion(habit.id, "full")}
+                            disabled={loggingHabitId === habit.id}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Done
+                          </Button>
+                        </>
+                      );
+                    })()}
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(habit)}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -258,32 +330,35 @@ export default function HabitsPage() {
                       // Reverse row order so scrolling starts at the right side (most recent) automatically
                       style={{ flexDirection: "row-reverse" }}
                     >
-                      {/* Reverse the days array so the newest is first in the flex container, naturally appearing on the right due to row-reverse */}
                       {[...days].reverse().map((date, i) => {
-                        const isCompleted = habitComps.some(c => isSameDay(new Date(c.completed_at), date));
+                        const comp = habitComps.find(c => isSameDay(new Date(c.completed_at), date));
+                        const isCompleted = !!comp;
+                        const isPartial = comp?.completion_type === "partial";
+                        const isFull = comp?.completion_type === "full";
                         const isToday = isSameDay(date, new Date());
-                        // Render smaller blocks if 365 days to fit more in
                         const isYearRange = timeRange === "365";
                         
                         return (
                           <div 
                             key={i} 
                             className="flex flex-col items-center gap-1 shrink-0 snap-start"
-                            title={format(date, "MMM d, yyyy")}
+                            title={`${format(date, "MMM d, yyyy")}${isPartial ? " — Partial" : isFull ? " — Complete" : ""}`}
                           >
                             <motion.div 
                               initial={false}
                               animate={{ scale: isCompleted ? 1 : 0.9 }}
                               className={cn(
-                                "rounded-md transition-colors flex items-center justify-center",
+                                "rounded-md transition-all flex items-center justify-center",
                                 isYearRange ? "w-4 h-4" : "w-6 h-6",
-                                isCompleted ? colorClass : "bg-muted hover:bg-muted/80",
+                                isFull && colorClass,
+                                isPartial && `${colorClass} opacity-50 border-2 border-dashed`,
+                                !isCompleted && "bg-muted hover:bg-muted/80",
                                 isToday && "ring-2 ring-foreground ring-offset-2 ring-offset-background"
                               )}
                             >
-                              {isCompleted && !isYearRange && <CheckCircle2 className="h-3 w-3 text-white opacity-80" />}
+                              {isFull && !isYearRange && <CheckCircle2 className="h-3 w-3 text-white opacity-90" />}
+                              {isPartial && !isYearRange && <span className="text-[8px] text-white font-bold leading-none">½</span>}
                             </motion.div>
-                            {/* Show day of month sparingly to keep it clean */}
                             {(date.getDate() === 1 || isToday) ? (
                               <span className={cn("text-[10px] font-medium whitespace-nowrap", isToday ? "text-foreground" : "text-muted-foreground", isYearRange && "text-[8px] tracking-tighter")}>
                                 {isToday ? 'Today' : format(date, "MMM")}
