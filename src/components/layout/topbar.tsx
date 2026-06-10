@@ -24,24 +24,24 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b-2 border-foreground bg-background/80 px-4 md:px-6 backdrop-blur-xl">
       <div className="flex items-center gap-4 lg:hidden">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger 
-            render={<Button variant="ghost" size="icon" className="lg:hidden" />}
+            render={<Button variant="ghost" size="icon" className="lg:hidden border-transparent hover:border-transparent shadow-none" />}
           >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
+          <SheetContent side="left" className="w-64 p-0 border-r-2 border-foreground">
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <SheetDescription className="sr-only">Navigate through the application</SheetDescription>
-            <div className="flex h-16 items-center border-b px-6">
+            <div className="flex h-16 items-center border-b-2 border-foreground px-6">
               <Link href="/dashboard" className="flex items-center gap-2 font-bold tracking-tight" onClick={() => setIsOpen(false)}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Target className="h-5 w-5" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-sm border-2 border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0px_0px_var(--foreground)]">
+                  <Target className="h-4 w-4" />
                 </div>
-                <span className="text-xl">ARAH</span>
+                <span className="text-sm font-press-start tracking-tighter mt-0.5">ARAH</span>
               </Link>
             </div>
             <div className="overflow-auto py-6 px-4 flex flex-col gap-6">
@@ -54,9 +54,9 @@ export function Topbar() {
                       href={item.href}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                        "flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-semibold transition-all border-2 border-transparent",
                         isActive
-                          ? "bg-primary/10 text-primary"
+                          ? "bg-primary/10 text-primary border-primary/20"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       )}
                     >
@@ -66,7 +66,7 @@ export function Topbar() {
                   );
                 })}
               </nav>
-              <nav className="grid gap-1 border-t pt-4">
+              <nav className="grid gap-1 border-t-2 border-foreground pt-4">
                 {secondaryNavItems.map((item) => {
                   const isActive = pathname.startsWith(item.href);
                   return (
@@ -75,9 +75,9 @@ export function Topbar() {
                       href={item.href}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                        "flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-semibold transition-all border-2 border-transparent",
                         isActive
-                          ? "bg-primary/10 text-primary"
+                          ? "bg-primary/10 text-primary border-primary/20"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       )}
                     >
@@ -90,16 +90,16 @@ export function Topbar() {
             </div>
           </SheetContent>
         </Sheet>
-        <span className="text-lg font-semibold lg:hidden">ARAH</span>
+        <span className="text-sm font-press-start tracking-tighter lg:hidden mt-0.5">ARAH</span>
       </div>
 
       <div className="hidden lg:flex items-center gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">{greeting}</h1>
+        <h1 className="text-xl font-bold tracking-tight">{greeting}</h1>
         <span className="text-2xl animate-pulse-soft">👋</span>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="relative h-9 w-9">
+        <Button variant="ghost" size="icon" className="relative h-9 w-9 border-transparent hover:border-transparent shadow-none hover:shadow-none active:translate-y-0">
           <Bell className="h-4 w-4" />
           <span className="absolute top-2 right-2.5 h-1.5 w-1.5 rounded-full bg-primary" />
           <span className="sr-only">Notifications</span>

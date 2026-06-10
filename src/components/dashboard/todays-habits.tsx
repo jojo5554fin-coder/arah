@@ -54,16 +54,14 @@ export function TodaysHabits({ habits, todayCompletions, onToggleHabit, onReflec
                 <button
                   type="button"
                   onClick={() => onReflectMissed(habit.id, habit.name)}
-                  className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+                  className="w-8 h-8 rounded-sm border-2 border-foreground bg-card flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shadow-[2px_2px_0px_0px_var(--foreground)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_var(--foreground)] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_var(--foreground)]"
                   title="Reflect on missing"
                 >
                   <Brain className="h-4 w-4" />
                 </button>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={(e) => {
                   if (!isCompleted) {
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -81,10 +79,10 @@ export function TodaysHabits({ habits, todayCompletions, onToggleHabit, onReflec
                   onToggleHabit(habit.id, isCompleted);
                 }}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "w-8 h-8 rounded-sm flex items-center justify-center transition-all outline-none border-2 border-foreground shadow-[2px_2px_0px_0px_var(--foreground)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_var(--foreground)] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_var(--foreground)]",
                   isCompleted 
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" 
-                    : "border-2 border-muted hover:border-primary/50 hover:bg-muted/30"
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-card hover:bg-muted"
                 )}
                 aria-label={`Toggle ${habit.name}`}
               >
@@ -97,7 +95,7 @@ export function TodaysHabits({ habits, todayCompletions, onToggleHabit, onReflec
                     <Check className="h-4 w-4" />
                   </motion.div>
                 )}
-              </motion.button>
+              </button>
             </div>
           </div>
         );

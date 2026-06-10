@@ -195,7 +195,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="col-span-2 sm:col-span-1 bg-card rounded-3xl border p-5 flex items-center gap-4"
+            className="col-span-2 sm:col-span-1 bg-card rounded-sm border-2 border-foreground shadow-[4px_4px_0px_0px_var(--foreground)] p-5 flex items-center gap-4"
           >
             <div className="relative h-20 w-20 shrink-0">
               <svg className="-rotate-90 absolute inset-0" width="80" height="80" viewBox="0 0 80 80">
@@ -211,24 +211,27 @@ export default function DashboardPage() {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-extrabold tabular-nums">{todayScore}%</span>
+                <span className="text-[10px] font-bold font-press-start tracking-tighter">{todayScore}%</span>
               </div>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Today's Score</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide font-press-start">Today's Score</p>
               <p className="font-bold text-sm mt-0.5">{scoreLabel}</p>
-              <p className="text-xs text-muted-foreground mt-1">{todayCompletions}/{habits.length} habits done</p>
+              <p className="text-xs text-muted-foreground mt-1">{todayCompletions}/{habits.length} done</p>
             </div>
           </motion.div>
 
           {/* Focus Timer shortcut */}
-          <Link href="/focus" className="col-span-2 sm:col-span-1 bg-primary/5 border border-primary/20 rounded-3xl p-5 flex items-center gap-4 hover:bg-primary/10 transition-colors group">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Timer className="h-6 w-6 text-primary" />
+          <Link 
+            href="/focus" 
+            className="col-span-2 sm:col-span-1 bg-primary/5 border-2 border-foreground rounded-sm p-5 flex items-center gap-4 hover:bg-primary/10 shadow-[4px_4px_0px_0px_var(--foreground)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--foreground)] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_var(--foreground)] transition-all group"
+          >
+            <div className="h-10 w-10 rounded-sm border-2 border-foreground bg-primary/10 flex items-center justify-center shadow-[2px_2px_0px_0px_var(--foreground)] transition-transform group-hover:scale-105">
+              <Timer className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-bold text-sm">Focus Timer</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Start a Pomodoro session</p>
+              <p className="font-bold text-sm font-pixel">Focus Timer</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Start Pomodoro</p>
             </div>
           </Link>
         </div>

@@ -51,35 +51,35 @@ export function GamificationWidget() {
   const Icon = levelInfo.icon;
 
   return (
-    <Card className="border-primary/10 shadow-sm overflow-hidden bg-gradient-to-br from-emerald-500/5 to-transparent">
+    <Card className="bg-gradient-to-br from-emerald-500/5 to-transparent overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
-          <Activity className="h-4 w-4" /> Momentum & Growth
+        <CardTitle className="text-[10px] font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider font-press-start">
+          <Activity className="h-3 w-3" /> Momentum & Growth
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-end justify-between mb-4">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-background border flex items-center justify-center shadow-sm ${levelInfo.color}`}>
+            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-sm bg-background border-2 border-foreground flex items-center justify-center shadow-[2px_2px_0px_0px_var(--foreground)] ${levelInfo.color}`}>
               <Icon className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <p className="text-xs md:text-sm text-muted-foreground">Current Level</p>
-              <p className={`text-lg md:text-xl font-bold ${levelInfo.color}`}>{levelInfo.label}</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Level</p>
+              <p className={`text-xs md:text-sm font-bold font-press-start uppercase tracking-tighter ${levelInfo.color}`}>{levelInfo.label}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl md:text-3xl font-black">{data.momentum_score}</p>
-            <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-semibold">Score</p>
+            <p className="text-xl md:text-2xl font-bold font-press-start text-emerald-500 tracking-tighter">{data.momentum_score}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">XP Score</p>
           </div>
         </div>
         
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Progress to Next Level</span>
-            <span>{data.momentum_score} / {levelInfo.nextScore}</span>
+        <div className="space-y-2">
+          <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wide font-press-start">
+            <span>Next Level</span>
+            <span>{data.momentum_score} / {levelInfo.nextScore} XP</span>
           </div>
-          <Progress value={(data.momentum_score / levelInfo.nextScore) * 100} className="h-2" />
+          <Progress value={(data.momentum_score / levelInfo.nextScore) * 100} />
         </div>
       </CardContent>
     </Card>

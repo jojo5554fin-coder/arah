@@ -89,10 +89,10 @@ export function HabitTrackerItem({ id, name, category, icon, isCompleted, onTogg
         onClick={handleToggle}
         disabled={isLoading}
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all active:scale-95",
+          "flex h-8 w-8 items-center justify-center rounded-sm border-2 border-foreground shadow-[2px_2px_0px_0px_var(--foreground)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_var(--foreground)] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_var(--foreground)] transition-all",
           optimisticCompleted 
-            ? "bg-primary border-primary text-primary-foreground" 
-            : "border-muted-foreground/30 bg-transparent hover:border-primary",
+            ? "bg-primary text-primary-foreground" 
+            : "bg-card",
           isLoading && "opacity-70 pointer-events-none"
         )}
       >
